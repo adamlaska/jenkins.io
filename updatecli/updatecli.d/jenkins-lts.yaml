@@ -19,6 +19,11 @@ sources:
     kind: shell
     spec:
       command: bash ./updatecli/scripts/jenkins-lts.sh 0 # source input value passed as argument
+  JenkinsLatestLTSBaseline:
+    name: Get the latest Jenkins LTS baseline version
+    kind: shell
+    spec:
+      command: bash ./updatecli/scripts/jenkins-lts-baseline.sh 0 # source input value passed as argument
   JenkinsPreviousLTS:
     name: Get the previous Jenkins LTS version
     kind: shell
@@ -59,15 +64,23 @@ sources:
   JenkinsOldestSupportedStable:
     name: Get the oldest supported Jenkins stable version
     kind: json
-    scmid: default
     spec:
       file: https://updates.jenkins.io/tiers.json
       key: "stableCores.[0]"
+  JenkinsOldestSupportedStableLatestPatch:
+    name: Get the oldest supported Jenkins stable version, in its latest patch version
+    kind: shell
+    spec:
+      command: bash ./updatecli/scripts/jenkins-oldest-supported-version.sh
 conditions:
   # Test that the latest LTS Jenkins version exists
   jenkinsLatestLTSVersion:
     kind: jenkins
     sourceid: JenkinsLatestLTS
+  # Test that the latest LTS Jenkins baseline version exists
+  jenkinsLatestLTSBaselineVersion:
+    kind: jenkins
+    sourceid: JenkinsLatestLTSBaseline
   # Test that the previous LTS Jenkins version exists
   jenkinsPreviousLTSVersion:
     kind: jenkins
@@ -86,7 +99,7 @@ targets:
       matchpattern: >-
         (.*You could also consider \*)(.*)(\* if there are specific reasons.*)
       replacepattern: >-
-        ${1}{{ source "JenkinsLatestLTS" }}${3}
+        ${1}{{ source "JenkinsLatestLTSBaseline" }}${3}
     scmid: default
   setJenkinsLTSVersionInMinimumRecommendedVersion:
     kind: file
@@ -141,7 +154,7 @@ targets:
       matchpattern: >-
         (.*Something around 1 year old .* makes a good choice and )(.*)( would be a reasonable candidate.*)
       replacepattern: >-
-        ${1}{{ source "JenkinsOldestSupportedStable" }}${3}
+        ${1}{{ source "JenkinsOldestSupportedStableLatestPatch" }}${3}
     scmid: default
   setJenkinsOldestSplit:
     kind: file
